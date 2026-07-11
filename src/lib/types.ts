@@ -128,6 +128,12 @@ export interface Ajustes {
   maxJornadaDiaria: number;
   /** Horas semanales de trabajo efectivo en promedio (ET art. 34.1: 40 h). */
   maxSemana: number;
+  /**
+   * Horas máximas de trabajo efectivo al año. El ET remite al convenio; el de
+   * transporte de mercancías por carretera de Cantabria fija 1.796 h (art. 7).
+   * 0 desactiva la comprobación.
+   */
+  maxJornadaAnual: number;
   /** Horas mínimas de descanso entre jornadas (ET art. 34.3: 12 h). */
   minDescansoEntreJornadas: number;
   /** Horas mínimas de descanso semanal ininterrumpido (ET art. 37.1: día y medio = 36 h). */
@@ -158,6 +164,7 @@ export const AJUSTES_POR_DEFECTO: Ajustes = {
   id: 'ajustes',
   maxJornadaDiaria: 9,
   maxSemana: 40,
+  maxJornadaAnual: 1796,
   minDescansoEntreJornadas: 12,
   minDescansoSemanal: 36,
   inicioNocturno: '22:00',

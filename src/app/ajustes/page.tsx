@@ -220,6 +220,12 @@ export default function PaginaAjustes() {
             sufijo="h/sem"
           />
           <CampoNumero
+            etiqueta="Jornada anual máxima (convenio; 0 = desactivada)"
+            valor={a.maxJornadaAnual}
+            onCambio={(v) => cambiar({ maxJornadaAnual: v })}
+            sufijo="h/año"
+          />
+          <CampoNumero
             etiqueta="Descanso mínimo entre jornadas (ET art. 34.3)"
             valor={a.minDescansoEntreJornadas}
             onCambio={(v) => cambiar({ minDescansoEntreJornadas: v })}
@@ -273,6 +279,26 @@ export default function PaginaAjustes() {
             onCambio={(v) => cambiar({ maxPresenciaSemanal: v })}
             sufijo="h/sem"
           />
+        </div>
+        <div className="mt-3 rounded-xl bg-surface-2 p-3">
+          <p className="text-xs text-ink2">
+            Convenio identificado (pendiente de confirmar con el contrato): transporte de
+            mercancías por carretera de Cantabria (BOC 30/06/2025). Sus valores citados:
+            jornada diaria de 8 h y anual de 1.796 h. Detalle en <code>docs/normativa.md</code>.
+          </p>
+          <button
+            onClick={() =>
+              cambiar({
+                maxJornadaDiaria: 8,
+                maxJornadaAnual: 1796,
+                convenioNombre:
+                  'Transporte de mercancías por carretera de Cantabria (39001385011981) — pendiente de confirmar',
+              })
+            }
+            className="btn-outline mt-2 !px-3 !py-1.5 text-xs"
+          >
+            Aplicar valores citados del convenio
+          </button>
         </div>
         <button onClick={guardar} className="btn-primary mt-3 w-full">
           {confirmacion ? 'Guardado ✓' : 'Guardar ajustes'}

@@ -257,11 +257,23 @@ export function analizarCumplimiento(
     }
   }
 
-  // Horas extraordinarias acumuladas en el año del inicio del rango
+  // Acumulados anuales: horas extraordinarias y jornada anual máxima
   const anio = desde.slice(0, 4);
   let minExtraAnio = 0;
+  let minEfectivosAnio = 0;
   for (const f of rangoFechas(`${anio}-01-01`, hasta)) {
-    minExtraAnio += (porDia.get(f) ?? estadisticasDia(f, datos, ajustes)).minExtra;
+    const d = porDia.get(f) ?? estadisticasDia(f, datos, ajustes);
+    minExtraAnio += d.minExtra;
+    minEfectivosAnio += d.minEfectivos;
+  }
+  if (ajustes.maxJornadaAnual > 0 && minEfectivosAnio > ajustes.maxJornadaAnual * 60) {
+    alertas.push({
+      fecha: hasta,
+      severidad: 'grave',
+      titulo: 'Jornada anual máxima superada',
+      detalle: `${fmtDuracion(minEfectivosAnio)} de trabajo efectivo acumuladas en ${anio}; la jornada máxima anual configurada es de ${ajustes.maxJornadaAnual} h (convenio de transporte de Cantabria, art. 7: 1.796 h).`,
+      referencia: 'Convenio aplicable / ET art. 34.1',
+    });
   }
   if (minExtraAnio > ajustes.maxHorasExtraAnuales * 60) {
     alertas.push({

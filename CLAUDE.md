@@ -44,12 +44,13 @@ Trabajo. También aplica el **RD 1561/1995** (jornadas especiales de trabajo: ti
 presencia en transporte por carretera; art. 8: máx. 20 h semanales de presencia en promedio
 mensual, umbral configurable en Ajustes).
 
-El convenio aplicable **está pendiente de confirmar** (el usuario aún no tiene el contrato).
-Hay dos candidatos investigados —grúas móviles autopropulsadas de Cantabria (dudoso: ese
-sector suele ser alquiler de grúas de elevación, no auxilio en carretera) y transporte de
-mercancías por carretera de Cantabria— documentados con sus valores citados y una lista de
-verificación en `docs/normativa.md`. Cuando se confirme, revisar los umbrales de Ajustes
-contra el texto real del convenio y anotarlo aquí y en ese documento.
+El convenio aplicable identificado por la investigación es el del **transporte de mercancías
+por carretera de Cantabria** (código 39001385011981, BOC 30/06/2025, vigencia 2025-2027);
+el de grúas móviles autopropulsadas quedó descartado (es alquiler de grúas de elevación).
+Valores citados: jornada diaria máx. 8 h y anual 1.796 h (art. 7). **Falta la confirmación
+definitiva con el contrato/nómina**: detalle, citas literales, lo declarado no verificado y
+la lista de comprobación están en `docs/normativa.md`. En Ajustes hay un botón para aplicar
+los valores citados del convenio.
 
 ## Implicaciones técnicas (ya implementadas — mantener al evolucionar)
 
