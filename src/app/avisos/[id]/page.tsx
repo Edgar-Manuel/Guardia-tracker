@@ -73,6 +73,20 @@ export default function PaginaDetalleAviso() {
       {/* Cronología */}
       <section className="card animar-entrada">
         <h2 className="mb-2 text-sm font-semibold">Cronología</h2>
+        <div className="mb-3">
+          <label className="label">Jornada a la que pertenece</label>
+          <input
+            type="date"
+            className="input"
+            value={aviso.fecha}
+            onChange={(e) => e.target.value && actualizar({ fecha: e.target.value })}
+          />
+          <p className="mt-1 text-[10px] text-muted">
+            Un aviso de madrugada puede asignarse a la jornada del día anterior; la amplitud y el
+            recuento de avisos se calculan sobre esta fecha. Si cambias la hora de asignación, la
+            jornada se ajusta a esa fecha.
+          </p>
+        </div>
         <div className="flex flex-col gap-2">
           {FASES_AVISO.map((fase: FaseAviso) => (
             <div key={fase} className="flex items-end gap-2">

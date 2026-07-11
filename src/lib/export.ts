@@ -1,8 +1,10 @@
-// Exportación de datos a CSV, JSON y Excel. Todo se genera en el navegador.
+// Exportación de datos a CSV, JSON y Excel, e importación del formato JSON
+// propio. Todo se procesa en el navegador.
 import type { Aviso, Descanso, Guardia } from './types';
 import { TIPOS_DESCANSO, TIPOS_GUARDIA, TIPOS_SERVICIO } from './types';
 import { duracionesAviso, type Datos } from './stats';
-import { fmtHora } from './time';
+import { fmtHora, nowISO } from './time';
+import { db } from './db';
 
 function descargarBlob(blob: Blob, nombre: string) {
   const url = URL.createObjectURL(blob);
@@ -98,6 +100,51 @@ export function exportarJSON(datos: Datos, sufijo: string) {
     2
   );
   descargarBlob(new Blob([json], { type: 'application/json' }), `guardia-tracker-${sufijo}.json`);
+}
+
+// --- Importación JSON (mismo formato que la exportación) ---
+
+export interface ResultadoImportacion {
+  guardias: number;
+  avisos: number;
+  descansos: number;
+}
+
+function validarFilas(filas: unknown, camposObligatorios: string[]): Record<string, unknown>[] {
+  if (!Array.isArray(filas)) return [];
+  return filas.filter(
+    (f): f is Record<string, unknown> =>
+      typeof f === 'object' &&
+      f !== null &&
+      camposObligatorios.every((c) => (f as Record<string, unknown>)[c] != null)
+  );
+}
+
+/**
+ * Importa un JSON con la forma { guardias, avisos, descansos }. Las filas se
+ * insertan o actualizan por id (idempotente) y se marcan como pendientes de
+ * sincronizar. Lanza si el texto no es JSON válido.
+ */
+export async function importarJSON(texto: string): Promise<ResultadoImportacion> {
+  const datos = JSON.parse(texto) as Record<string, unknown>;
+  const guardias = validarFilas(datos.guardias, ['id', 'fecha', 'inicio', 'tipo']) as unknown as Guardia[];
+  const avisos = validarFilas(datos.avisos, ['id', 'fecha', 'tipo']) as unknown as Aviso[];
+  const descansos = validarFilas(datos.descansos, ['id', 'inicio', 'tipo']) as unknown as Descanso[];
+
+  const marcar = <T extends { updatedAt?: string; deletedAt?: string | null; dirty?: number }>(f: T) => ({
+    ...f,
+    updatedAt: f.updatedAt ?? nowISO(),
+    deletedAt: f.deletedAt ?? null,
+    dirty: 1,
+  });
+
+  await db.transaction('rw', db.guardias, db.avisos, db.descansos, async () => {
+    await db.guardias.bulkPut(guardias.map(marcar));
+    await db.avisos.bulkPut(avisos.map(marcar));
+    await db.descansos.bulkPut(descansos.map(marcar));
+  });
+
+  return { guardias: guardias.length, avisos: avisos.length, descansos: descansos.length };
 }
 
 // --- Excel ---

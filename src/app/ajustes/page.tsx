@@ -9,8 +9,9 @@ import { db, guardarAjustes, obtenerAjustes } from '@/lib/db';
 import { getSupabase, supabaseConfigurado } from '@/lib/supabase';
 import { onEstadoSync, sincronizar, type EstadoSync } from '@/lib/sync';
 import { AJUSTES_POR_DEFECTO, type Ajustes } from '@/lib/types';
-import { exportarJSON } from '@/lib/export';
+import { exportarJSON, importarJSON } from '@/lib/export';
 import { DESCARGO_LEGAL } from '@/lib/legal';
+import { useRef } from 'react';
 
 function CampoNumero({
   etiqueta,
@@ -140,6 +141,23 @@ export default function PaginaAjustes() {
   const guardado = useLiveQuery(() => obtenerAjustes(), []);
   const [ajustes, setAjustes] = useState<Ajustes | null>(null);
   const [confirmacion, setConfirmacion] = useState(false);
+  const [mensajeImportacion, setMensajeImportacion] = useState<string | null>(null);
+  const inputImportar = useRef<HTMLInputElement>(null);
+
+  const importarArchivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = e.target.files?.[0];
+    e.target.value = '';
+    if (!archivo) return;
+    try {
+      const r = await importarJSON(await archivo.text());
+      setMensajeImportacion(
+        `Importado: ${r.guardias} guardias, ${r.avisos} avisos y ${r.descansos} descansos.`
+      );
+      void sincronizar();
+    } catch {
+      setMensajeImportacion('No se pudo importar: el archivo no tiene el formato esperado.');
+    }
+  };
 
   useEffect(() => {
     if (guardado && !ajustes) setAjustes(guardado);
@@ -256,14 +274,28 @@ export default function PaginaAjustes() {
       </section>
 
       <section className="card animar-entrada">
-        <h2 className="mb-1 text-sm font-semibold">Copia de seguridad</h2>
+        <h2 className="mb-1 text-sm font-semibold">Copia de seguridad y datos</h2>
         <p className="mb-2 text-xs text-ink2">
           Descarga todos los datos de este dispositivo (incluidos los eliminados) en un archivo
-          JSON.
+          JSON, o importa un archivo con el mismo formato (los registros se añaden o actualizan
+          por su identificador, así que importar dos veces no duplica).
         </p>
-        <button onClick={exportarTodo} className="btn-tonal">
-          Exportar copia completa (JSON)
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={exportarTodo} className="btn-tonal">
+            Exportar copia completa (JSON)
+          </button>
+          <button onClick={() => inputImportar.current?.click()} className="btn-outline">
+            Importar datos (JSON)
+          </button>
+          <input
+            ref={inputImportar}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={importarArchivo}
+          />
+        </div>
+        {mensajeImportacion && <p className="mt-2 text-xs text-ink2">{mensajeImportacion}</p>}
       </section>
 
       <p className="px-2 text-[10px] leading-relaxed text-muted">{DESCARGO_LEGAL}</p>

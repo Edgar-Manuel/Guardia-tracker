@@ -6,7 +6,15 @@
 // jurídico. El texto del descargo está en DESCARGO_LEGAL.
 import type { Ajustes, AlertaLegal, Aviso } from './types';
 import { estadisticasDia, finAviso, inicioAviso, type Datos } from './stats';
-import { fmtDuracion, fmtFechaCorta, inicioSemana, minutosEntre, rangoFechas, sumarDias } from './time';
+import {
+  fechaADate,
+  fmtDuracion,
+  fmtFechaCorta,
+  inicioSemana,
+  minutosEntre,
+  rangoFechas,
+  sumarDias,
+} from './time';
 
 export const DESCARGO_LEGAL =
   'Las alertas de esta aplicación se calculan automáticamente a partir de los datos ' +
@@ -146,11 +154,19 @@ export function analizarCumplimiento(
       .filter((x): x is { ini: string; fin: string } => Boolean(x.ini && x.fin))
       .sort((a, b) => a.ini.localeCompare(b.ini));
     if (intervalos.length >= 3) {
-      let mayorHueco = 0;
-      for (let i = 1; i < intervalos.length; i++) {
-        const h = minutosEntre(intervalos[i - 1].fin, intervalos[i].ini);
-        if (h != null && h > mayorHueco) mayorHueco = h;
+      // Mayor periodo sin avisos incluyendo los bordes de la semana, para que
+      // los días sin actividad cuenten como descanso y no haya falsos positivos.
+      const inicioSemanaMs = fechaADate(lunes).getTime();
+      const finSemanaMs = inicioSemanaMs + 7 * 24 * 60 * 60000;
+      let mayorHuecoMs = 0;
+      let cursor = inicioSemanaMs;
+      for (const it of intervalos) {
+        const s = new Date(it.ini).getTime();
+        if (s - cursor > mayorHuecoMs) mayorHuecoMs = s - cursor;
+        cursor = Math.max(cursor, new Date(it.fin).getTime());
       }
+      if (finSemanaMs - cursor > mayorHuecoMs) mayorHuecoMs = finSemanaMs - cursor;
+      const mayorHueco = Math.round(mayorHuecoMs / 60000);
       if (mayorHueco > 0 && mayorHueco < ajustes.minDescansoSemanal * 60) {
         alertas.push({
           fecha: lunes,
