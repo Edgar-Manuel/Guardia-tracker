@@ -146,6 +146,11 @@ export interface Ajustes {
    * presencia en el transporte por carretera.
    */
   maxAmplitudDiaria: number;
+  /**
+   * Horas máximas de tiempo de presencia (guardia sin trabajo efectivo) por
+   * semana, en promedio mensual (RD 1561/1995 art. 8: 20 h semanales).
+   */
+  maxPresenciaSemanal: number;
   convenioNombre: string;
 }
 
@@ -160,6 +165,7 @@ export const AJUSTES_POR_DEFECTO: Ajustes = {
   maxHorasExtraAnuales: 80,
   minPausaJornadaContinuada: 15,
   maxAmplitudDiaria: 12,
+  maxPresenciaSemanal: 20,
   convenioNombre: '',
 };
 

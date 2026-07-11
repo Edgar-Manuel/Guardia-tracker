@@ -202,7 +202,7 @@ export default function PaginaAjustes() {
             <label className="label">Convenio aplicable (opcional)</label>
             <input
               className="input"
-              placeholder="Ej.: Convenio de transporte de mercancías por carretera de…"
+              placeholder="Ej.: Convenio de vehículos de auxilio en carretera (confírmalo en tu contrato o nómina)"
               value={a.convenioNombre}
               onChange={(e) => cambiar({ convenioNombre: e.target.value })}
             />
@@ -266,6 +266,12 @@ export default function PaginaAjustes() {
             valor={a.maxAmplitudDiaria}
             onCambio={(v) => cambiar({ maxAmplitudDiaria: v })}
             sufijo="h/día"
+          />
+          <CampoNumero
+            etiqueta="Presencia semanal máxima, promedio mensual (RD 1561/1995 art. 8)"
+            valor={a.maxPresenciaSemanal}
+            onCambio={(v) => cambiar({ maxPresenciaSemanal: v })}
+            sufijo="h/sem"
           />
         </div>
         <button onClick={guardar} className="btn-primary mt-3 w-full">

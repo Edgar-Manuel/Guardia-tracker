@@ -235,6 +235,28 @@ export function analizarCumplimiento(
     }
   }
 
+  // Tiempo de presencia (RD 1561/1995 art. 8): la guardia sin trabajo efectivo
+  // no puede superar las horas semanales configuradas en promedio mensual.
+  // Solo se evalúa cuando el rango analizado se acerca al mes (≥ 28 días),
+  // que es el periodo de referencia de la norma.
+  if (fechas.length >= 28) {
+    let minPresencia = 0;
+    for (const f of fechas) {
+      const d = porDia.get(f)!;
+      minPresencia += Math.max(0, d.minGuardia - d.minEfectivos);
+    }
+    const promedioSemanal = Math.round(minPresencia / (fechas.length / 7));
+    if (promedioSemanal > ajustes.maxPresenciaSemanal * 60) {
+      alertas.push({
+        fecha: desde,
+        severidad: 'grave',
+        titulo: 'Tiempo de presencia semanal superior al permitido',
+        detalle: `Entre el ${fmtFechaCorta(desde)} y el ${fmtFechaCorta(hasta)} el tiempo de presencia (guardia sin trabajo efectivo) promedia ${fmtDuracion(promedioSemanal)} por semana; el límite configurado es de ${ajustes.maxPresenciaSemanal} h semanales de promedio mensual.`,
+        referencia: 'RD 1561/1995 art. 8',
+      });
+    }
+  }
+
   // Horas extraordinarias acumuladas en el año del inicio del rango
   const anio = desde.slice(0, 4);
   let minExtraAnio = 0;

@@ -9,8 +9,9 @@ No es una app de fichar entrada/salida: debe **reflejar la realidad del trabajo 
 
 ### Cómo funciona su empresa
 
-- Semanas alternas: una semana de **guardia de 12 horas**, la siguiente de **guardia 24/7**
-  (disponible las 24 horas todos los días).
+- Semanas alternas: una semana de **guardia de 12 horas** (lunes a viernes de **08:00 a
+  20:00**; el viernes a las 20:00 apaga el móvil hasta el lunes a las 08:00), la siguiente
+  de **guardia 24/7** (disponible las 24 horas todos los días).
 - **Solo libra sábado y domingo de la semana de 12 h.** La semana 24/7 no tiene ningún día
   libre, así que el ciclo real de 14 días encadena **12 días seguidos de trabajo/guardia**
   con solo 2 de descanso. Por eso el descanso semanal se evalúa contando las guardias como
@@ -40,7 +41,12 @@ Datos objetivos —no conflicto— para saber si la jornada cumple el Estatuto d
 Trabajadores y el convenio aplicable, hablar con su responsable con información precisa, y
 disponer de un registro fiable y exportable para un gestor, un abogado o la Inspección de
 Trabajo. También aplica el **RD 1561/1995** (jornadas especiales de trabajo: tiempos de
-presencia en transporte por carretera).
+presencia en transporte por carretera; art. 8: máx. 20 h semanales de presencia en promedio
+mensual, umbral configurable en Ajustes).
+
+El convenio aplicable **está pendiente de confirmar** (posiblemente el de vehículos/empresas
+de auxilio en carretera; el usuario aún no tiene el contrato). Cuando se confirme, revisar
+los umbrales de Ajustes contra el texto del convenio y anotarlo aquí.
 
 ## Implicaciones técnicas (ya implementadas — mantener al evolucionar)
 

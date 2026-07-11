@@ -97,7 +97,7 @@ function FormularioSemana({ onCerrar }: { onCerrar: () => void }) {
   const hoy = fechaLocal();
   const [lunes, setLunes] = useState(inicioSemana(hoy));
   const [tipoSemana, setTipoSemana] = useState<'12h' | '24_7'>('12h');
-  const [horaInicio, setHoraInicio] = useState('09:00');
+  const [horaInicio, setHoraInicio] = useState('08:00');
 
   const crear = async () => {
     const guardias: Guardia[] = [];
