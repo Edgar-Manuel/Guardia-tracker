@@ -44,9 +44,12 @@ Trabajo. También aplica el **RD 1561/1995** (jornadas especiales de trabajo: ti
 presencia en transporte por carretera; art. 8: máx. 20 h semanales de presencia en promedio
 mensual, umbral configurable en Ajustes).
 
-El convenio aplicable **está pendiente de confirmar** (posiblemente el de vehículos/empresas
-de auxilio en carretera; el usuario aún no tiene el contrato). Cuando se confirme, revisar
-los umbrales de Ajustes contra el texto del convenio y anotarlo aquí.
+El convenio aplicable **está pendiente de confirmar** (el usuario aún no tiene el contrato).
+Hay dos candidatos investigados —grúas móviles autopropulsadas de Cantabria (dudoso: ese
+sector suele ser alquiler de grúas de elevación, no auxilio en carretera) y transporte de
+mercancías por carretera de Cantabria— documentados con sus valores citados y una lista de
+verificación en `docs/normativa.md`. Cuando se confirme, revisar los umbrales de Ajustes
+contra el texto real del convenio y anotarlo aquí y en ese documento.
 
 ## Implicaciones técnicas (ya implementadas — mantener al evolucionar)
 
