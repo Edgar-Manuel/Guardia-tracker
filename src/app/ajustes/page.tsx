@@ -243,6 +243,12 @@ export default function PaginaAjustes() {
             onCambio={(v) => cambiar({ minPausaJornadaContinuada: v })}
             sufijo="min"
           />
+          <CampoNumero
+            etiqueta="Amplitud de jornada máxima orientativa (RD 1561/1995)"
+            valor={a.maxAmplitudDiaria}
+            onCambio={(v) => cambiar({ maxAmplitudDiaria: v })}
+            sufijo="h/día"
+          />
         </div>
         <button onClick={guardar} className="btn-primary mt-3 w-full">
           {confirmacion ? 'Guardado ✓' : 'Guardar ajustes'}

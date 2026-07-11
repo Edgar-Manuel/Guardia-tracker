@@ -19,14 +19,18 @@ y el convenio aplicable.
 - **Pantalla principal** con hora actual, estado (libre / en guardia / en servicio /
   descansando), temporizador en tiempo real, flujo de un toque para sellar cada fase del aviso
   y resumen del día.
-- **Estadísticas** por día, semana y mes: horas efectivas, tiempo de guardia, nº de avisos,
-  medias, horas nocturnas, exceso de jornada, conducción, tiempo con clientes, esperas,
-  descansos y kilómetros. Gráficos interactivos.
+- **Estadísticas** por día, semana y mes: horas efectivas, **amplitud de jornada** (del
+  primer aviso al cierre del último, la métrica que refleja la disponibilidad real de las
+  guardias), tiempo de guardia, nº de avisos, medias, horas nocturnas, exceso de jornada,
+  conducción, tiempo con clientes, esperas, descansos y kilómetros. Gráficos interactivos.
+  Los avisos solapados (uno entra antes de cerrar el anterior) se fusionan para no contar
+  el tiempo dos veces.
 - **Calendario** mensual con detalle por día (avisos, horas, mapa si hay ubicación, alertas).
 - **Alertas legales automáticas** (sin asesoramiento jurídico): jornadas superiores a las
-  permitidas, descansos insuficientes entre jornadas y semanales, pausas insuficientes,
-  jornadas nocturnas y horas extraordinarias acumuladas. Umbrales configurables según convenio
-  en Ajustes (por defecto, Estatuto de los Trabajadores: arts. 34, 35, 36 y 37).
+  permitidas, amplitud de jornada elevada, descansos insuficientes entre jornadas y
+  semanales, pausas insuficientes, jornadas nocturnas y horas extraordinarias acumuladas.
+  Umbrales configurables según convenio en Ajustes (por defecto, Estatuto de los
+  Trabajadores arts. 34–37; tiempos de presencia: RD 1561/1995).
 - **Informes PDF** con calendario, resúmenes diario/semanal/mensual, gráfico, tabla completa de
   avisos, descansos, horas nocturnas y extraordinarias e incidencias detectadas.
 - **Exportación** a PDF, Excel, CSV y JSON.

@@ -305,6 +305,16 @@ export default function PaginaInicio() {
                 : undefined
             }
           />
+          <StatTile
+            etiqueta="Amplitud de jornada"
+            valor={fmtDuracion(resumenHoy?.minAmplitud ?? 0)}
+            detalle="del 1.º al último aviso"
+            acento={
+              resumenHoy && resumenHoy.minAmplitud > ajustes.maxAmplitudDiaria * 60
+                ? 'warn'
+                : undefined
+            }
+          />
           <StatTile etiqueta="Tiempo de guardia" valor={fmtDuracion(resumenHoy?.minGuardia ?? 0)} />
           <StatTile etiqueta="Avisos" valor={String(resumenHoy?.numAvisos ?? 0)} />
           <StatTile etiqueta="Conducción" valor={fmtDuracion(resumenHoy?.minConduccion ?? 0)} />

@@ -23,6 +23,8 @@ export type TipoServicio =
   | 'rescate'
   | 'accidente'
   | 'averia_mecanica'
+  | 'desplazamiento_base'
+  | 'recogida_vehiculo'
   | 'otro';
 
 export const TIPOS_SERVICIO: Record<TipoServicio, string> = {
@@ -36,6 +38,8 @@ export const TIPOS_SERVICIO: Record<TipoServicio, string> = {
   rescate: 'Rescate',
   accidente: 'Accidente',
   averia_mecanica: 'Avería mecánica',
+  desplazamiento_base: 'Desplazamiento a base',
+  recogida_vehiculo: 'Recogida de vehículo',
   otro: 'Otro',
 };
 
@@ -136,6 +140,12 @@ export interface Ajustes {
   maxHorasExtraAnuales: number;
   /** Minutos mínimos de pausa en jornada continuada de más de 6 h (ET art. 34.4: 15 min). */
   minPausaJornadaContinuada: number;
+  /**
+   * Horas de amplitud de jornada (primer aviso → cierre del último) a partir de
+   * las cuales se avisa. Orientativo: RD 1561/1995 regula los tiempos de
+   * presencia en el transporte por carretera.
+   */
+  maxAmplitudDiaria: number;
   convenioNombre: string;
 }
 
@@ -149,6 +159,7 @@ export const AJUSTES_POR_DEFECTO: Ajustes = {
   finNocturno: '06:00',
   maxHorasExtraAnuales: 80,
   minPausaJornadaContinuada: 15,
+  maxAmplitudDiaria: 12,
   convenioNombre: '',
 };
 

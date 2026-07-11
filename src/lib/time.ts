@@ -159,6 +159,25 @@ export function minutosNocturnos(
   return Math.round(total);
 }
 
+/**
+ * Fusiona intervalos solapados [inicio, fin] en milisegundos.
+ * Imprescindible para no contar dos veces el tiempo cuando un aviso entra
+ * antes de cerrar el anterior.
+ */
+export function unirIntervalos(intervalos: Array<[number, number]>): Array<[number, number]> {
+  const validos = intervalos.filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
+  const unidos: Array<[number, number]> = [];
+  for (const [s, e] of validos) {
+    const ultimo = unidos[unidos.length - 1];
+    if (ultimo && s <= ultimo[1]) {
+      ultimo[1] = Math.max(ultimo[1], e);
+    } else {
+      unidos.push([s, e]);
+    }
+  }
+  return unidos;
+}
+
 /** Recorta un intervalo ISO a un día local; devuelve minutos dentro de ese día. */
 export function minutosEnDia(inicioISO: string, finISO: string, fecha: string): number {
   const dia = fechaADate(fecha).getTime();

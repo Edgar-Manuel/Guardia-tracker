@@ -86,11 +86,12 @@ export async function generarInformePDF(
     head: [['Concepto', 'Valor', 'Concepto', 'Valor']],
     body: [
       ['Horas de trabajo efectivo', fmtDuracion(stats.minEfectivos), 'Nº de avisos', String(stats.numAvisos)],
-      ['Tiempo de guardia / presencia', fmtDuracion(stats.minGuardia), 'Duración media por aviso', fmtDuracion(stats.mediaDuracionAviso)],
-      ['Horas nocturnas', fmtDuracion(stats.minNocturnos), 'Media entre avisos', fmtDuracion(stats.mediaEntreAvisos)],
-      ['Exceso sobre jornada diaria', fmtDuracion(stats.minExtra), 'Tiempo conduciendo', fmtDuracion(stats.minConduccion)],
-      ['Descansos registrados', fmtDuracion(stats.minDescanso), 'Tiempo con clientes', fmtDuracion(stats.minConCliente)],
-      ['Kilómetros realizados', `${stats.km} km`, 'Tiempo esperando', fmtDuracion(stats.minEspera)],
+      ['Amplitud de jornada (1.º → último aviso)', fmtDuracion(stats.minAmplitud), 'Duración media por aviso', fmtDuracion(stats.mediaDuracionAviso)],
+      ['Tiempo de guardia / presencia', fmtDuracion(stats.minGuardia), 'Media entre avisos', fmtDuracion(stats.mediaEntreAvisos)],
+      ['Horas nocturnas', fmtDuracion(stats.minNocturnos), 'Tiempo conduciendo', fmtDuracion(stats.minConduccion)],
+      ['Exceso sobre jornada diaria', fmtDuracion(stats.minExtra), 'Tiempo con clientes', fmtDuracion(stats.minConCliente)],
+      ['Descansos registrados', fmtDuracion(stats.minDescanso), 'Tiempo esperando', fmtDuracion(stats.minEspera)],
+      ['Kilómetros realizados', `${stats.km} km`, '', ''],
     ],
   });
   y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
@@ -212,10 +213,11 @@ export async function generarInformePDF(
     theme: 'striped',
     styles: { fontSize: 8.5, textColor: TINTA },
     headStyles: { fillColor: AZUL, textColor: [255, 255, 255] },
-    head: [['Semana (lunes)', 'Efectivas', 'Guardia', 'Nocturnas', 'Exceso', 'Avisos', 'Km']],
+    head: [['Semana (lunes)', 'Efectivas', 'Amplitud', 'Guardia', 'Nocturnas', 'Exceso', 'Avisos', 'Km']],
     body: Array.from(semanas.entries()).map(([lunes, ds]) => [
       fmtFechaCorta(lunes),
       fmtDuracion(ds.reduce((s, d) => s + d.minEfectivos, 0)),
+      fmtDuracion(ds.reduce((s, d) => s + d.minAmplitud, 0)),
       fmtDuracion(ds.reduce((s, d) => s + d.minGuardia, 0)),
       fmtDuracion(ds.reduce((s, d) => s + d.minNocturnos, 0)),
       fmtDuracion(ds.reduce((s, d) => s + d.minExtra, 0)),
@@ -238,10 +240,11 @@ export async function generarInformePDF(
       theme: 'striped',
       styles: { fontSize: 8, textColor: TINTA },
       headStyles: { fillColor: AZUL, textColor: [255, 255, 255] },
-      head: [['Fecha', 'Efectivas', 'Guardia', 'Nocturnas', 'Exceso', 'Descanso', 'Avisos', 'Conducción', 'Km']],
+      head: [['Fecha', 'Efectivas', 'Amplitud', 'Guardia', 'Nocturnas', 'Exceso', 'Descanso', 'Avisos', 'Conducción', 'Km']],
       body: diasActivos.map((d) => [
         fmtFechaCorta(d.fecha),
         fmtDuracion(d.minEfectivos),
+        d.minAmplitud > 0 ? fmtDuracion(d.minAmplitud) : '—',
         fmtDuracion(d.minGuardia),
         d.minNocturnos > 0 ? fmtDuracion(d.minNocturnos) : '—',
         d.minExtra > 0 ? fmtDuracion(d.minExtra) : '—',
@@ -251,7 +254,7 @@ export async function generarInformePDF(
         String(d.km),
       ]),
       didParseCell: (data) => {
-        if (data.section === 'body' && data.column.index === 4 && data.cell.text[0] !== '—') {
+        if (data.section === 'body' && data.column.index === 5 && data.cell.text[0] !== '—') {
           data.cell.styles.textColor = ROJO;
           data.cell.styles.fontStyle = 'bold';
         }

@@ -93,6 +93,16 @@ export default function PaginaEstadisticas() {
               : undefined
           }
         />
+        <StatTile
+          etiqueta="Amplitud de jornada"
+          valor={fmtDuracion(stats?.minAmplitud ?? 0)}
+          detalle="del 1.º al último aviso"
+          acento={
+            stats && periodo === 'hoy' && stats.minAmplitud > ajustes.maxAmplitudDiaria * 60
+              ? 'warn'
+              : undefined
+          }
+        />
         <StatTile etiqueta="Tiempo de guardia" valor={fmtDuracion(stats?.minGuardia ?? 0)} />
         <StatTile etiqueta="Nº de avisos" valor={String(stats?.numAvisos ?? 0)} />
         <StatTile etiqueta="Media por aviso" valor={fmtDuracion(stats?.mediaDuracionAviso ?? null)} />

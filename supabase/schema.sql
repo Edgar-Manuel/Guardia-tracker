@@ -22,7 +22,8 @@ create table if not exists public.avisos (
   tipo text not null check (
     tipo in (
       'bateria', 'pinchazo', 'cambio_rueda', 'traslado_coche', 'traslado_moto',
-      'apertura', 'combustible', 'rescate', 'accidente', 'averia_mecanica', 'otro'
+      'apertura', 'combustible', 'rescate', 'accidente', 'averia_mecanica',
+      'desplazamiento_base', 'recogida_vehiculo', 'otro'
     )
   ),
   hora_asignacion timestamptz,

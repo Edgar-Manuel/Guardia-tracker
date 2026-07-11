@@ -59,6 +59,18 @@ export function analizarCumplimiento(
       });
     }
 
+    // Amplitud de jornada excesiva: mucho tiempo de disponibilidad real aunque
+    // el trabajo efectivo quede dentro del límite (p. ej. 8 h repartidas en 16 h).
+    if (dia.minAmplitud > ajustes.maxAmplitudDiaria * 60) {
+      alertas.push({
+        fecha,
+        severidad: 'aviso',
+        titulo: 'Amplitud de jornada elevada',
+        detalle: `Del primer aviso al cierre del último transcurrieron ${fmtDuracion(dia.minAmplitud)} el ${fmtFechaCorta(fecha)} (trabajo efectivo: ${fmtDuracion(dia.minEfectivos)}; umbral configurado: ${ajustes.maxAmplitudDiaria} h). El tiempo de presencia está regulado en el transporte por carretera.`,
+        referencia: 'RD 1561/1995 (tiempos de presencia)',
+      });
+    }
+
     // Jornada nocturna (≥ 3 h en periodo nocturno)
     if (dia.minNocturnos >= 180) {
       alertas.push({

@@ -7,6 +7,7 @@ import {
   minutosEntre,
   minutosEnDia,
   minutosNocturnos,
+  unirIntervalos,
   nowISO,
   fechaADate,
   rangoFechas,
@@ -60,6 +61,12 @@ export interface EstadisticasDia {
   minParado: number;
   numAvisos: number;
   km: number;
+  /**
+   * Amplitud de la jornada: del inicio del primer aviso del día al cierre del
+   * último (puede cruzar medianoche). Mide la disponibilidad real, no el
+   * trabajo efectivo: 8 h efectivas pueden repartirse en 16 h de amplitud.
+   */
+  minAmplitud: number;
 }
 
 /** Recorta un intervalo abierto usando la hora actual como fin provisional. */
@@ -90,25 +97,25 @@ export function estadisticasDia(fecha: string, datos: Datos, ajustes: Ajustes): 
     minParado: 0,
     numAvisos: 0,
     km: 0,
+    minAmplitud: 0,
   };
+
+  const dia0 = fechaADate(fecha).getTime();
+  const dia24 = dia0 + 24 * 60 * 60000;
+  // Tramos de trabajo recortados al día; se fusionan para que los avisos
+  // solapados (uno entra antes de cerrar el anterior) no cuenten dos veces.
+  const tramos: Array<[number, number]> = [];
+  let primerInicio: number | null = null;
+  let ultimoFin: number | null = null;
 
   for (const a of datos.avisos) {
     const ini = inicioAviso(a);
     if (ini && solapaDia(ini, finAviso(a), fecha)) {
       const fin = finODefecto(finAviso(a));
-      r.minEfectivos += minutosEnDia(ini, fin, fecha);
-      // Solape nocturno del tramo que cae dentro de este día.
-      const dia = fechaADate(fecha).getTime();
-      const s = Math.max(new Date(ini).getTime(), dia);
-      const e = Math.min(new Date(fin).getTime(), dia + 24 * 60 * 60000);
-      if (e > s) {
-        r.minNocturnos += minutosNocturnos(
-          new Date(s).toISOString(),
-          new Date(e).toISOString(),
-          ajustes.inicioNocturno,
-          ajustes.finNocturno
-        );
-      }
+      tramos.push([
+        Math.max(new Date(ini).getTime(), dia0),
+        Math.min(new Date(fin).getTime(), dia24),
+      ]);
     }
     if (a.fecha === fecha) {
       r.numAvisos += 1;
@@ -118,7 +125,27 @@ export function estadisticasDia(fecha: string, datos: Datos, ajustes: Ajustes): 
       r.minEspera += d.espera ?? 0;
       r.minParado += d.parado ?? 0;
       r.km += d.km ?? 0;
+      if (ini) {
+        const s = new Date(ini).getTime();
+        const e = new Date(finODefecto(finAviso(a))).getTime();
+        if (primerInicio === null || s < primerInicio) primerInicio = s;
+        if (ultimoFin === null || e > ultimoFin) ultimoFin = e;
+      }
     }
+  }
+
+  for (const [s, e] of unirIntervalos(tramos)) {
+    r.minEfectivos += Math.round((e - s) / 60000);
+    r.minNocturnos += minutosNocturnos(
+      new Date(s).toISOString(),
+      new Date(e).toISOString(),
+      ajustes.inicioNocturno,
+      ajustes.finNocturno
+    );
+  }
+
+  if (primerInicio !== null && ultimoFin !== null && ultimoFin > primerInicio) {
+    r.minAmplitud = Math.round((ultimoFin - primerInicio) / 60000);
   }
 
   for (const g of datos.guardias) {
@@ -152,6 +179,8 @@ export interface EstadisticasRango {
   minParado: number;
   numAvisos: number;
   km: number;
+  /** Suma de amplitudes diarias (disponibilidad real de primer a último aviso). */
+  minAmplitud: number;
   /** Duración media de un aviso (salida → disponible), en minutos. */
   mediaDuracionAviso: number | null;
   /** Tiempo medio entre el fin de un aviso y el inicio del siguiente, en minutos. */
@@ -180,6 +209,7 @@ export function estadisticasRango(
     minParado: 0,
     numAvisos: 0,
     km: 0,
+    minAmplitud: 0,
     mediaDuracionAviso: null,
     mediaEntreAvisos: null,
   };
@@ -195,6 +225,7 @@ export function estadisticasRango(
     r.minParado += d.minParado;
     r.numAvisos += d.numAvisos;
     r.km += d.km;
+    r.minAmplitud += d.minAmplitud;
   }
 
   const avisosRango = avisosEnRango(desde, hasta, datos.avisos);

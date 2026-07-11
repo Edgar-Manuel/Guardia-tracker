@@ -158,6 +158,7 @@ export default function PaginaCalendario() {
 
           <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-ink2 sm:grid-cols-3">
             <p>Efectivas: <b className="text-ink">{fmtDuracion(statsDia.minEfectivos)}</b></p>
+            <p>Amplitud: <b className="text-ink">{fmtDuracion(statsDia.minAmplitud)}</b></p>
             <p>Guardia: <b className="text-ink">{fmtDuracion(statsDia.minGuardia)}</b></p>
             <p>Avisos: <b className="text-ink">{statsDia.numAvisos}</b></p>
             <p>Nocturnas: <b className="text-ink">{fmtDuracion(statsDia.minNocturnos)}</b></p>

@@ -52,7 +52,9 @@ export async function borrarSuave(
 
 export async function obtenerAjustes(): Promise<Ajustes> {
   const a = await db.ajustes.get('ajustes');
-  return a ?? AJUSTES_POR_DEFECTO;
+  // Se mezclan con los valores por defecto para que los ajustes guardados con
+  // versiones anteriores adquieran los campos nuevos.
+  return { ...AJUSTES_POR_DEFECTO, ...a };
 }
 
 export async function guardarAjustes(a: Ajustes) {
