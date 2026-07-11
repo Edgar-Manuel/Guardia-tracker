@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens de diseño (paleta validada, modos claro y oscuro seleccionados a mano).
+   Tripletas RGB para que Tailwind admita modificadores de opacidad. */
+:root {
+  --bg: 249 249 247; /* #f9f9f7 */
+  --surface: 252 252 251; /* #fcfcfb */
+  --surface-2: 240 239 236; /* #f0efec */
+  --ink: 11 11 11; /* #0b0b0b */
+  --ink-2: 82 81 78; /* #52514e */
+  --muted: 137 135 129; /* #898781 */
+  --line: 225 224 217; /* #e1e0d9 */
+  --grid: 225 224 217;
+  --primary: 42 120 214; /* #2a78d6 */
+  --primary-soft: 205 226 251; /* #cde2fb */
+  --good: 12 163 12; /* #0ca30c */
+  --warn: 201 133 0; /* #c98500 */
+  --serious: 236 131 90; /* #ec835a */
+  --critical: 208 59 59; /* #d03b3b */
+}
+
+.dark {
+  --bg: 13 13 13; /* #0d0d0d */
+  --surface: 26 26 25; /* #1a1a19 */
+  --surface-2: 36 36 34; /* #242422 */
+  --ink: 255 255 255;
+  --ink-2: 195 194 183; /* #c3c2b7 */
+  --muted: 137 135 129;
+  --line: 44 44 42; /* #2c2c2a */
+  --grid: 44 44 42;
+  --primary: 57 135 229; /* #3987e5 */
+  --primary-soft: 16 66 129; /* #104281 */
+  --good: 12 163 12;
+  --warn: 250 178 25; /* #fab219 */
+  --serious: 236 131 90;
+  --critical: 230 103 103; /* #e66767 */
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--ink));
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface p-4 shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-40 disabled:pointer-events-none select-none;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white hover:opacity-90 active:opacity-80;
+  }
+  .btn-tonal {
+    @apply btn bg-surface-2 text-ink hover:bg-line;
+  }
+  .btn-outline {
+    @apply btn border border-line text-ink hover:bg-surface-2;
+  }
+  .btn-danger {
+    @apply btn bg-critical text-white hover:opacity-90;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/25;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium text-ink2;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+}
+
+/* Transiciones suaves entre temas y estados */
+.card,
+.btn,
+.input,
+body {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animar-entrada {
+  animation: aparecer 0.25s ease both;
+}
+
+@keyframes pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.pulso {
+  animation: pulso 1.8s ease-in-out infinite;
+}
