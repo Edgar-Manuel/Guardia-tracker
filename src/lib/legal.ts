@@ -12,6 +12,7 @@ import {
   fmtFechaCorta,
   inicioSemana,
   minutosEntre,
+  nowISO,
   rangoFechas,
   sumarDias,
 } from './time';
@@ -21,6 +22,41 @@ export const DESCARGO_LEGAL =
   'registrados y de los umbrales configurados. Tienen carácter meramente informativo y ' +
   'no constituyen asesoramiento jurídico. Para valorar un posible incumplimiento consulte ' +
   'con un profesional o con la representación legal de los trabajadores.';
+
+/**
+ * Huecos (en minutos) sin avisos NI guardias dentro de la ventana
+ * [desde, hastaExclusiva), incluyendo los bordes. Las guardias cuentan como
+ * presencia: estar disponible no es descansar.
+ */
+function huecosSinPresencia(desde: string, hastaExclusiva: string, datos: Datos): number[] {
+  const inicioMs = fechaADate(desde).getTime();
+  const finMs = fechaADate(hastaExclusiva).getTime();
+  const ahora = nowISO();
+  const presencia: Array<[number, number]> = [];
+  for (const a of datos.avisos) {
+    const ini = inicioAviso(a);
+    const fin = finAviso(a);
+    if (ini && fin) presencia.push([new Date(ini).getTime(), new Date(fin).getTime()]);
+  }
+  for (const g of datos.guardias) {
+    presencia.push([new Date(g.inicio).getTime(), new Date(g.fin ?? ahora).getTime()]);
+  }
+  presencia.sort((x, y) => x[0] - y[0]);
+
+  const huecos: number[] = [];
+  let cursor = inicioMs;
+  for (const [s, e] of presencia) {
+    if (e <= inicioMs || s >= finMs) continue;
+    if (s - cursor > 0) huecos.push(Math.round((s - cursor) / 60000));
+    cursor = Math.max(cursor, e);
+  }
+  if (finMs - cursor > 0) huecos.push(Math.round((finMs - cursor) / 60000));
+  return huecos;
+}
+
+function mayorHuecoSinPresencia(desde: string, hastaExclusiva: string, datos: Datos): number {
+  return huecosSinPresencia(desde, hastaExclusiva, datos).reduce((m, h) => Math.max(m, h), 0);
+}
 
 function ultimoFinTrabajo(fecha: string, avisos: Aviso[]): string | null {
   let ultimo: string | null = null;
@@ -147,35 +183,55 @@ export function analizarCumplimiento(
       });
     }
 
-    // Descanso semanal: buscar el mayor hueco sin trabajo dentro de la semana.
-    const intervalos = datos.avisos
-      .filter((a) => a.fecha >= lunes && a.fecha <= sumarDias(lunes, 6))
-      .map((a) => ({ ini: inicioAviso(a), fin: finAviso(a) }))
-      .filter((x): x is { ini: string; fin: string } => Boolean(x.ini && x.fin))
-      .sort((a, b) => a.ini.localeCompare(b.ini));
-    if (intervalos.length >= 3) {
-      // Mayor periodo sin avisos incluyendo los bordes de la semana, para que
-      // los días sin actividad cuenten como descanso y no haya falsos positivos.
-      const inicioSemanaMs = fechaADate(lunes).getTime();
-      const finSemanaMs = inicioSemanaMs + 7 * 24 * 60 * 60000;
-      let mayorHuecoMs = 0;
-      let cursor = inicioSemanaMs;
-      for (const it of intervalos) {
-        const s = new Date(it.ini).getTime();
-        if (s - cursor > mayorHuecoMs) mayorHuecoMs = s - cursor;
-        cursor = Math.max(cursor, new Date(it.fin).getTime());
-      }
-      if (finSemanaMs - cursor > mayorHuecoMs) mayorHuecoMs = finSemanaMs - cursor;
-      const mayorHueco = Math.round(mayorHuecoMs / 60000);
-      if (mayorHueco > 0 && mayorHueco < ajustes.minDescansoSemanal * 60) {
+    // Descanso semanal: mayor hueco sin trabajo NI guardia dentro de la semana.
+    // Las guardias cuentan como presencia (estar disponible no es descansar):
+    // una semana de guardia 24/7 no tiene descanso semanal aunque haya huecos
+    // sin avisos. Solo se evalúa en semanas con 5+ días de actividad para no
+    // generar falsos positivos con registros incompletos.
+    const diasConActividad = diasSemana.filter((f) => {
+      const d = porDia.get(f) ?? estadisticasDia(f, datos, ajustes);
+      return d.minEfectivos > 0 || d.minGuardia > 0 || d.numAvisos > 0;
+    }).length;
+    if (diasConActividad >= 5) {
+      const mayorHueco = mayorHuecoSinPresencia(lunes, sumarDias(lunes, 7), datos);
+      if (mayorHueco < ajustes.minDescansoSemanal * 60) {
         alertas.push({
           fecha: lunes,
           severidad: 'aviso',
           titulo: 'Posible descanso semanal insuficiente',
-          detalle: `El mayor periodo sin avisos en la semana del ${fmtFechaCorta(lunes)} fue de ${fmtDuracion(mayorHueco)} (mínimo orientativo: ${ajustes.minDescansoSemanal} h ininterrumpidas).`,
+          detalle: `El mayor periodo sin avisos ni guardia en la semana del ${fmtFechaCorta(lunes)} fue de ${fmtDuracion(mayorHueco)} (mínimo orientativo: ${ajustes.minDescansoSemanal} h ininterrumpidas, acumulable en periodos de hasta 14 días).`,
           referencia: 'ET art. 37.1',
         });
       }
+    }
+  }
+
+  // Descanso acumulado en 14 días: el ET permite acumular el día y medio
+  // semanal en periodos de hasta 14 días, así que dos semanas seguidas deben
+  // reunir al menos 2 × el mínimo en bloques ininterrumpidos que lo alcancen.
+  // Clave para ciclos como «semana de 12 h (libra sáb-dom) + semana 24/7»,
+  // que encadenan 12 días seguidos de presencia.
+  const lunesOrdenados = Array.from(semanas).sort();
+  for (const lunes of lunesOrdenados) {
+    const finVentana = sumarDias(lunes, 13);
+    if (finVentana > hasta) break;
+    const diasVentana = rangoFechas(lunes, finVentana);
+    const diasConActividad = diasVentana.filter((f) => {
+      const d = porDia.get(f) ?? estadisticasDia(f, datos, ajustes);
+      return d.minEfectivos > 0 || d.minGuardia > 0 || d.numAvisos > 0;
+    }).length;
+    if (diasConActividad < 8) continue;
+    const minimo = ajustes.minDescansoSemanal * 60;
+    const bloques = huecosSinPresencia(lunes, sumarDias(lunes, 14), datos).filter((h) => h >= minimo);
+    const acumulado = bloques.reduce((s, h) => s + h, 0);
+    if (acumulado < minimo * 2) {
+      alertas.push({
+        fecha: lunes,
+        severidad: 'grave',
+        titulo: 'Descanso acumulado en 14 días insuficiente',
+        detalle: `Entre el ${fmtFechaCorta(lunes)} y el ${fmtFechaCorta(finVentana)} los periodos de descanso de al menos ${ajustes.minDescansoSemanal} h suman ${fmtDuracion(acumulado)} (referencia: ${ajustes.minDescansoSemanal * 2} h en 14 días). Estar de guardia cuenta como presencia, no como descanso.`,
+        referencia: 'ET art. 37.1',
+      });
     }
   }
 

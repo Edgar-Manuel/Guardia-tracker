@@ -10,13 +10,16 @@ import type { Guardia, TipoGuardia } from '@/lib/types';
 import { TIPOS_GUARDIA } from '@/lib/types';
 import {
   fechaDeISO,
+  fechaLocal,
   fmtDuracion,
   fmtFechaLarga,
   fmtHora,
+  inicioSemana,
   isoALocalInput,
   localInputAISO,
   minutosEntre,
   nowISO,
+  sumarDias,
 } from '@/lib/time';
 
 function FormularioGuardia({ guardia, onCerrar }: { guardia?: Guardia; onCerrar: () => void }) {
@@ -88,8 +91,107 @@ function FormularioGuardia({ guardia, onCerrar }: { guardia?: Guardia; onCerrar:
   );
 }
 
+// Alta de una semana completa según el ciclo real del usuario: semana de
+// guardia de 12 h de lunes a viernes (libra sábado y domingo) o semana 24/7.
+function FormularioSemana({ onCerrar }: { onCerrar: () => void }) {
+  const hoy = fechaLocal();
+  const [lunes, setLunes] = useState(inicioSemana(hoy));
+  const [tipoSemana, setTipoSemana] = useState<'12h' | '24_7'>('12h');
+  const [horaInicio, setHoraInicio] = useState('09:00');
+
+  const crear = async () => {
+    const guardias: Guardia[] = [];
+    if (tipoSemana === '24_7') {
+      const inicio = new Date(`${lunes}T00:00`);
+      const fin = new Date(inicio);
+      fin.setDate(fin.getDate() + 7);
+      guardias.push({
+        id: nuevoId(),
+        fecha: lunes,
+        inicio: inicio.toISOString(),
+        fin: fin.toISOString(),
+        tipo: 'guardia_24h',
+        notas: 'Semana de guardia 24/7',
+        updatedAt: nowISO(),
+        deletedAt: null,
+        dirty: 1,
+      });
+    } else {
+      // Lunes a viernes, 12 h desde la hora elegida; sábado y domingo libres.
+      for (let i = 0; i < 5; i++) {
+        const fecha = sumarDias(lunes, i);
+        const inicio = new Date(`${fecha}T${horaInicio}`);
+        const fin = new Date(inicio.getTime() + 12 * 60 * 60000);
+        guardias.push({
+          id: nuevoId(),
+          fecha,
+          inicio: inicio.toISOString(),
+          fin: fin.toISOString(),
+          tipo: 'guardia_12h',
+          notas: 'Semana de guardia 12 h (L–V)',
+          updatedAt: nowISO(),
+          deletedAt: null,
+          dirty: 1,
+        });
+      }
+    }
+    await db.guardias.bulkAdd(guardias);
+    void sincronizar();
+    onCerrar();
+  };
+
+  return (
+    <div className="card animar-entrada flex flex-col gap-2 border-primary/40">
+      <h2 className="text-sm font-semibold">Semana completa de guardia</h2>
+      <div className="grid grid-cols-2 gap-1.5">
+        <button
+          onClick={() => setTipoSemana('12h')}
+          className={`rounded-xl border px-2 py-2 text-xs font-medium ${
+            tipoSemana === '12h' ? 'border-primary bg-primary-soft text-ink' : 'border-line text-ink2'
+          }`}
+        >
+          12 h de lunes a viernes
+        </button>
+        <button
+          onClick={() => setTipoSemana('24_7')}
+          className={`rounded-xl border px-2 py-2 text-xs font-medium ${
+            tipoSemana === '24_7' ? 'border-primary bg-primary-soft text-ink' : 'border-line text-ink2'
+          }`}
+        >
+          24/7 toda la semana
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="label">Lunes de la semana</label>
+          <input type="date" className="input" value={lunes} onChange={(e) => setLunes(e.target.value)} />
+        </div>
+        {tipoSemana === '12h' && (
+          <div>
+            <label className="label">Hora de inicio diaria</label>
+            <input type="time" className="input" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
+          </div>
+        )}
+      </div>
+      <p className="text-[10px] text-muted">
+        {tipoSemana === '12h'
+          ? 'Crea 5 guardias de 12 h (lunes a viernes); el sábado y el domingo quedan libres.'
+          : 'Crea una única guardia continua desde el lunes a las 00:00 hasta el lunes siguiente.'}
+      </p>
+      <div className="flex gap-2">
+        <button onClick={crear} className="btn-primary flex-1">
+          Crear semana
+        </button>
+        <button onClick={onCerrar} className="btn-outline">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function PaginaGuardias() {
-  const [editando, setEditando] = useState<string | 'nueva' | null>(null);
+  const [editando, setEditando] = useState<string | 'nueva' | 'semana' | null>(null);
   const guardias = useLiveQuery(
     () =>
       db.guardias
@@ -112,14 +214,20 @@ export default function PaginaGuardias() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Guardias</h1>
-        <button onClick={() => setEditando('nueva')} className="btn-primary">
-          + Nueva guardia
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setEditando('semana')} className="btn-tonal">
+            + Semana
+          </button>
+          <button onClick={() => setEditando('nueva')} className="btn-primary">
+            + Nueva guardia
+          </button>
+        </div>
       </div>
 
       {editando === 'nueva' && <FormularioGuardia onCerrar={() => setEditando(null)} />}
+      {editando === 'semana' && <FormularioSemana onCerrar={() => setEditando(null)} />}
 
       {guardias && guardias.length === 0 && editando === null && (
         <div className="card py-10 text-center text-sm text-muted">
