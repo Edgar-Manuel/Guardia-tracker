@@ -12,10 +12,45 @@ import {
   fmtFechaCorta,
   inicioSemana,
   minutosEntre,
+  minutosNocturnos,
   nowISO,
   rangoFechas,
   sumarDias,
+  unirIntervalos,
 } from './time';
+import type { Ajustes as AjustesTipo } from './types';
+
+/**
+ * Trabajo efectivo de la JORNADA (avisos atribuidos a la fecha, con solapes
+ * fusionados y sin recortar a medianoche). Los límites diarios del RD
+ * 1561/1995 (12 h totales; 10 h si hay trabajo nocturno) se refieren a la
+ * jornada/periodo de 24 h, no al día natural.
+ */
+function efectivosJornada(
+  fecha: string,
+  avisos: Aviso[],
+  ajustes: AjustesTipo
+): { min: number; minNocturnos: number } {
+  const tramos: Array<[number, number]> = [];
+  for (const a of avisos) {
+    if (a.fecha !== fecha) continue;
+    const ini = inicioAviso(a);
+    const fin = finAviso(a);
+    if (ini && fin) tramos.push([new Date(ini).getTime(), new Date(fin).getTime()]);
+  }
+  let min = 0;
+  let noct = 0;
+  for (const [s, e] of unirIntervalos(tramos)) {
+    min += Math.round((e - s) / 60000);
+    noct += minutosNocturnos(
+      new Date(s).toISOString(),
+      new Date(e).toISOString(),
+      ajustes.inicioNocturno,
+      ajustes.finNocturno
+    );
+  }
+  return { min, minNocturnos: noct };
+}
 
 export const DESCARGO_LEGAL =
   'Las alertas de esta aplicación se calculan automáticamente a partir de los datos ' +
@@ -103,6 +138,32 @@ export function analizarCumplimiento(
       });
     }
 
+    // Límites diarios del transporte, medidos sobre la jornada completa
+    // (puede cruzar medianoche).
+    const jornada = efectivosJornada(fecha, datos.avisos, ajustes);
+
+    // Jornada total diaria (trabajo efectivo + extra): máx. 12 h
+    if (jornada.min > ajustes.maxJornadaTotalDiaria * 60) {
+      alertas.push({
+        fecha,
+        severidad: 'grave',
+        titulo: 'Jornada total diaria superior al máximo del transporte',
+        detalle: `${fmtDuracion(jornada.min)} de trabajo en la jornada del ${fmtFechaCorta(fecha)}; en el transporte por carretera la jornada total diaria (efectivo más extraordinarias) no puede superar las ${ajustes.maxJornadaTotalDiaria} h.`,
+        referencia: 'RD 1561/1995 art. 8.2',
+      });
+    }
+
+    // Trabajador móvil con trabajo nocturno: máx. 10 h por periodo de 24 h
+    if (jornada.minNocturnos > 0 && jornada.min > 10 * 60) {
+      alertas.push({
+        fecha,
+        severidad: 'grave',
+        titulo: 'Más de 10 h de trabajo en una jornada con trabajo nocturno',
+        detalle: `La jornada del ${fmtFechaCorta(fecha)} suma ${fmtDuracion(jornada.min)} de trabajo incluyendo tramo nocturno; los trabajadores móviles que realizan trabajo nocturno no pueden superar las 10 h por cada periodo de 24 h.`,
+        referencia: 'RD 1561/1995 art. 10 bis',
+      });
+    }
+
     // Amplitud de jornada excesiva: mucho tiempo de disponibilidad real aunque
     // el trabajo efectivo quede dentro del límite (p. ej. 8 h repartidas en 16 h).
     if (dia.minAmplitud > ajustes.maxAmplitudDiaria * 60) {
@@ -126,14 +187,20 @@ export function analizarCumplimiento(
       });
     }
 
-    // Pausa insuficiente en jornada continuada > 6 h
-    if (dia.minEfectivos > 6 * 60 && dia.minDescanso < ajustes.minPausaJornadaContinuada) {
+    // Pausa insuficiente. Para trabajadores móviles el RD 1561/1995 exige más
+    // que los 15 min del ET: 30 min si la jornada pasa de 6 h y 45 min si pasa
+    // de 9 h (en fracciones de al menos 15 min).
+    const pausaRequerida = Math.max(
+      ajustes.minPausaJornadaContinuada,
+      dia.minEfectivos > 9 * 60 ? 45 : 30
+    );
+    if (dia.minEfectivos > 6 * 60 && dia.minDescanso < pausaRequerida) {
       alertas.push({
         fecha,
         severidad: 'aviso',
         titulo: 'Pausa insuficiente en jornada continuada',
-        detalle: `Más de 6 h de trabajo el ${fmtFechaCorta(fecha)} con solo ${fmtDuracion(dia.minDescanso)} de descanso registrado (mínimo ${ajustes.minPausaJornadaContinuada} min).`,
-        referencia: 'ET art. 34.4',
+        detalle: `Más de ${dia.minEfectivos > 9 * 60 ? 9 : 6} h de trabajo el ${fmtFechaCorta(fecha)} con solo ${fmtDuracion(dia.minDescanso)} de descanso registrado; los trabajadores móviles necesitan al menos ${pausaRequerida} min de pausa.`,
+        referencia: 'ET art. 34.4 · RD 1561/1995 art. 10 bis',
       });
     }
 
@@ -180,6 +247,17 @@ export function analizarCumplimiento(
         titulo: 'Jornada semanal superior a la permitida',
         detalle: `${fmtDuracion(minSemana)} de trabajo efectivo en la semana del ${fmtFechaCorta(lunes)} (límite semanal de referencia: ${ajustes.maxSemana} h de promedio anual).`,
         referencia: 'ET art. 34.1',
+      });
+    }
+
+    // Máximo absoluto semanal de los trabajadores móviles: 60 h
+    if (minSemana > ajustes.maxSemanaAbsoluta * 60) {
+      alertas.push({
+        fecha: lunes,
+        severidad: 'grave',
+        titulo: 'Semana por encima del máximo absoluto del transporte',
+        detalle: `${fmtDuracion(minSemana)} de trabajo efectivo en la semana del ${fmtFechaCorta(lunes)}; los trabajadores móviles no pueden superar en ningún caso las ${ajustes.maxSemanaAbsoluta} h semanales.`,
+        referencia: 'RD 1561/1995 art. 10 bis.1',
       });
     }
 
@@ -235,24 +313,37 @@ export function analizarCumplimiento(
     }
   }
 
-  // Tiempo de presencia (RD 1561/1995 art. 8): la guardia sin trabajo efectivo
-  // no puede superar las horas semanales configuradas en promedio mensual.
-  // Solo se evalúa cuando el rango analizado se acerca al mes (≥ 28 días),
-  // que es el periodo de referencia de la norma.
+  // Promedios del rango (≥ 28 días): tiempo de presencia (RD art. 8, promedio
+  // mensual) y promedio semanal de trabajo efectivo de trabajadores móviles
+  // (RD art. 10 bis.1, cuyo periodo de referencia legal es cuatrimestral).
   if (fechas.length >= 28) {
     let minPresencia = 0;
+    let minEfectivosRango = 0;
     for (const f of fechas) {
       const d = porDia.get(f)!;
       minPresencia += Math.max(0, d.minGuardia - d.minEfectivos);
+      minEfectivosRango += d.minEfectivos;
     }
-    const promedioSemanal = Math.round(minPresencia / (fechas.length / 7));
-    if (promedioSemanal > ajustes.maxPresenciaSemanal * 60) {
+    const semanasRango = fechas.length / 7;
+    const promedioPresencia = Math.round(minPresencia / semanasRango);
+    if (promedioPresencia > ajustes.maxPresenciaSemanal * 60) {
       alertas.push({
         fecha: desde,
         severidad: 'grave',
         titulo: 'Tiempo de presencia semanal superior al permitido',
-        detalle: `Entre el ${fmtFechaCorta(desde)} y el ${fmtFechaCorta(hasta)} el tiempo de presencia (guardia sin trabajo efectivo) promedia ${fmtDuracion(promedioSemanal)} por semana; el límite configurado es de ${ajustes.maxPresenciaSemanal} h semanales de promedio mensual.`,
+        detalle: `Entre el ${fmtFechaCorta(desde)} y el ${fmtFechaCorta(hasta)} el tiempo de presencia (guardia sin trabajo efectivo) promedia ${fmtDuracion(promedioPresencia)} por semana; el límite configurado es de ${ajustes.maxPresenciaSemanal} h semanales de promedio mensual.`,
         referencia: 'RD 1561/1995 art. 8',
+      });
+    }
+
+    const promedioEfectivo = Math.round(minEfectivosRango / semanasRango);
+    if (promedioEfectivo > ajustes.maxSemanaPromedioMovil * 60) {
+      alertas.push({
+        fecha: desde,
+        severidad: fechas.length >= 112 ? 'grave' : 'aviso',
+        titulo: 'Promedio semanal de trabajo superior al del transporte',
+        detalle: `Entre el ${fmtFechaCorta(desde)} y el ${fmtFechaCorta(hasta)} el trabajo efectivo promedia ${fmtDuracion(promedioEfectivo)} por semana; los trabajadores móviles no pueden superar las ${ajustes.maxSemanaPromedioMovil} h semanales de promedio en cómputo cuatrimestral${fechas.length < 112 ? ' (el rango analizado es menor que el periodo de referencia de 4 meses: valor orientativo)' : ''}.`,
+        referencia: 'RD 1561/1995 art. 10 bis.1',
       });
     }
   }

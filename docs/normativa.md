@@ -63,6 +63,47 @@
 - **Descanso semanal** (trabajadores móviles): reducible hasta **24 h consecutivas**
   compensando en bloque dentro de las tres semanas siguientes (general: 45 h).
 
+## Límites específicos de trabajadores móviles (RD 1561/1995, tercera ronda de investigación)
+
+Un tercer informe técnico-jurídico detalló los límites del RD 1561/1995 aplicables a los
+trabajadores móviles del transporte por carretera (todos implementados en la app):
+
+- **Art. 8.2**: jornada total diaria (trabajo efectivo + horas extraordinarias) **máx. 12 h**.
+- **Art. 10 bis.1**: trabajo efectivo **máx. 48 h semanales de promedio en cómputo
+  cuatrimestral** y **nunca más de 60 h en una semana**.
+- **Art. 10 bis**: quien realiza trabajo nocturno sin ser «trabajador nocturno» no puede
+  superar **10 h de trabajo por cada periodo de 24 h**.
+- **Art. 10 bis**: pausas de los móviles en jornada continuada: **30 min si supera 6 h** y
+  **45 min si supera 9 h**, en fracciones de al menos 15 min (más exigente que el ET).
+- **Art. 10.3-10.4**: es trabajo efectivo el tiempo en que el móvil no puede disponer de su
+  tiempo y debe permanecer dispuesto a intervenir; las esperas de duración desconocida son
+  trabajo efectivo (las 2 primeras horas de espera de carga/descarga, presencia).
+- Obligación empresarial de **registro del tiempo de trabajo con conservación de 3 años** y
+  copia para el trabajador que la pida — el registro propio de esta app y sus exportaciones
+  cubren la contraparte del trabajador.
+- **RD 2001/1983 art. 43.4**: en transporte se abonan como extraordinarias las horas que
+  excedan de 40 semanales de trabajo efectivo; las de presencia, a prorrata del salario
+  ordinario.
+
+### Jurisprudencia adicional del Tribunal Supremo (tercera ronda)
+
+- **STS 3452/2022 (26/09/2022)** y **STS 2597/2023 (07/06/2023)**: las guardias con
+  presencia física en base y obligación de activación inmediata son **tiempo de trabajo
+  efectivo**, diga lo que diga la etiqueta del convenio. La STS 2597/2023 además excluye a
+  las **ambulancias** del RD 1561/1995 — no expulsa al auxilio en carretera, que sí es
+  transporte de mercancías (vehículos), pero recuerda que la categoría «presencia» exige
+  encaje real en el RD.
+- **STS 82/2024 (11/01/2024)**: el tiempo acompañando al vehículo en ferry con litera es
+  **presencia retribuida**, no descanso (art. 10.4 RD): la categoría intermedia es válida
+  cuando favorece al trabajador.
+- **STS 3648/2024 (25/06/2024)**: transporte sanitario de Castilla y León; distingue horas
+  efectivas, de presencia y extraordinarias (útil por analogía).
+
+Nota: esta tercera ronda **no pudo verificar por sí misma** el convenio de Cantabria (ni
+confirmar ni desmentir los datos de la segunda ronda), así que la identificación del
+convenio de transporte de mercancías por carretera de Cantabria sigue **pendiente de
+confirmación con el contrato/nómina**.
+
 ## Estatuto de los Trabajadores — RDL 2/2015, BOE-A-2015-11430, vigente
 
 Citas literales verificadas por la investigación: art. 34.1 (40 h semanales de promedio

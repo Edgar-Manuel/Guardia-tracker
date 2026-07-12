@@ -126,8 +126,23 @@ export interface Ajustes {
   id: string;
   /** Horas máximas de trabajo efectivo diario (ET art. 34.3: 9 h salvo convenio). */
   maxJornadaDiaria: number;
+  /**
+   * Horas máximas de jornada total diaria (trabajo efectivo + extra) para
+   * trabajadores del transporte (RD 1561/1995 art. 8.2: 12 h).
+   */
+  maxJornadaTotalDiaria: number;
   /** Horas semanales de trabajo efectivo en promedio (ET art. 34.1: 40 h). */
   maxSemana: number;
+  /**
+   * Horas máximas absolutas de trabajo efectivo en una semana para
+   * trabajadores móviles (RD 1561/1995 art. 10 bis.1: 60 h).
+   */
+  maxSemanaAbsoluta: number;
+  /**
+   * Promedio semanal máximo de trabajo efectivo de trabajadores móviles en
+   * cómputo cuatrimestral (RD 1561/1995 art. 10 bis.1: 48 h).
+   */
+  maxSemanaPromedioMovil: number;
   /**
    * Horas máximas de trabajo efectivo al año. El ET remite al convenio; el de
    * transporte de mercancías por carretera de Cantabria fija 1.796 h (art. 7).
@@ -163,7 +178,10 @@ export interface Ajustes {
 export const AJUSTES_POR_DEFECTO: Ajustes = {
   id: 'ajustes',
   maxJornadaDiaria: 9,
+  maxJornadaTotalDiaria: 12,
   maxSemana: 40,
+  maxSemanaAbsoluta: 60,
+  maxSemanaPromedioMovil: 48,
   maxJornadaAnual: 1796,
   minDescansoEntreJornadas: 12,
   minDescansoSemanal: 36,
