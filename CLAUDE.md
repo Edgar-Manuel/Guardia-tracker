@@ -40,9 +40,11 @@ lo que impide descansar o tener vida personal. Ejemplo real de una jornada:
 Datos objetivos —no conflicto— para saber si la jornada cumple el Estatuto de los
 Trabajadores y el convenio aplicable, hablar con su responsable con información precisa, y
 disponer de un registro fiable y exportable para un gestor, un abogado o la Inspección de
-Trabajo. También aplica el **RD 1561/1995** (jornadas especiales de trabajo: tiempos de
-presencia en transporte por carretera; art. 8: máx. 20 h semanales de presencia en promedio
-mensual, umbral configurable en Ajustes).
+Trabajo. También aplica el **RD 1561/1995** (jornadas especiales de trabajo, transporte por
+carretera), cuyos límites para trabajadores móviles están implementados con umbrales
+configurables: presencia máx. 20 h/sem de promedio mensual (art. 8), jornada total diaria
+máx. 12 h (art. 8.2), máx. 48 h/sem de promedio cuatrimestral y 60 h absolutas (art. 10
+bis.1), 10 h/día si hay trabajo nocturno y pausas de 30/45 min (art. 10 bis).
 
 El convenio aplicable identificado por la investigación es el del **transporte de mercancías
 por carretera de Cantabria** (código 39001385011981, BOC 30/06/2025, vigencia 2025-2027);

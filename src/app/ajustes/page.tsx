@@ -226,6 +226,24 @@ export default function PaginaAjustes() {
             sufijo="h/año"
           />
           <CampoNumero
+            etiqueta="Jornada total diaria máxima del transporte (RD 1561/1995 art. 8.2)"
+            valor={a.maxJornadaTotalDiaria}
+            onCambio={(v) => cambiar({ maxJornadaTotalDiaria: v })}
+            sufijo="h/día"
+          />
+          <CampoNumero
+            etiqueta="Máximo absoluto semanal, trabajadores móviles (RD art. 10 bis)"
+            valor={a.maxSemanaAbsoluta}
+            onCambio={(v) => cambiar({ maxSemanaAbsoluta: v })}
+            sufijo="h/sem"
+          />
+          <CampoNumero
+            etiqueta="Promedio semanal máximo cuatrimestral, móviles (RD art. 10 bis)"
+            valor={a.maxSemanaPromedioMovil}
+            onCambio={(v) => cambiar({ maxSemanaPromedioMovil: v })}
+            sufijo="h/sem"
+          />
+          <CampoNumero
             etiqueta="Descanso mínimo entre jornadas (ET art. 34.3)"
             valor={a.minDescansoEntreJornadas}
             onCambio={(v) => cambiar({ minDescansoEntreJornadas: v })}
